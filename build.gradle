@@ -1,0 +1,91 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "2.1.4.RELEASE"
+    id 'com.commercehub.cucumber-jvm' version "0.11"
+}
+
+springBoot {
+    mainClassName = 'br.com.automacao.runners.LocalTest'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation group: 'junit', name: 'junit', version: '4.12'
+
+    implementation group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13.2'
+    implementation group: 'com.itextpdf.tool', name: 'xmlworker', version: '5.5.13.2'
+
+    implementation group: 'commons-net', name: 'commons-net', version: '3.6'
+    implementation group: 'net.schmizz', name: 'sshj', version: '0.9.0'
+
+    //implementation group: 'org.springframework.boot', name: 'spring-cloud-dependencies', version: 'Greenwich.RELEASE', ext: 'pom'
+    implementation group: 'org.springframework.cloud', name: 'spring-cloud-dependencies', version: 'Hoxton.SR8', ext: 'pom'
+    //implementation group: 'org.springframework.boot', name: 'spring-cloud-starter-openfeign', version: '2.1.1.RELEASE'
+    implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign', version: '2.1.1.RELEASE'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-jdbc', version: '2.3.5.RELEASE'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.3.5.RELEASE'
+
+   implementation group: 'io.cucumber', name: 'cucumber-java', version: '4.8.0'
+    implementation group: 'io.cucumber', name: 'cucumber-junit', version: '4.8.0'
+    implementation group: 'io.cucumber', name: 'cucumber-core', version: '4.8.0'
+
+    implementation group: 'io.cucumber', name: 'cucumber-spring', version: '4.2.6'
+    implementation group: 'io.cucumber', name: 'gherkin', version: '5.1.0'
+    implementation group: 'io.cucumber', name: 'datatable', version: '1.1.14'
+
+    implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.4.0'
+    implementation group: 'com.mashape.unirest', name: 'unirest-java', version: '1.4.9'
+    implementation group: 'com.aventstack', name: 'extentreports', version: '3.1.5'
+    implementation group: 'ru.yandex.qatools.ashot', name: 'ashot', version: '1.5.4'
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+addCucumberSuite 'main'
+sourceSets.main.java.srcDirs = ['src/main/java']
+
+task testes() {
+    dependsOn assemble, compileTestJava
+    doLast {
+        javaexec {
+            main = "cucumber.api.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            arg = [
+                    'classpath:features',
+                    '--tags', "@teste",
+                    '--glue', "br.com.tailon.steps",
+                    '--glue', "br.com.tailon.core",
+                    '--plugin', "pretty",
+                    '--plugin', "rerun:target/rerun.txt",
+            ]
+        }
+    }
+}
+
+
+task rerun_testes() {
+    dependsOn assemble, compileTestJava
+    doLast {
+        javaexec {
+            main = "cucumber.api.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            arg = [
+                    '@../seila/target/rerun.txt',
+                    '--glue', "br.com.tailon.steps",
+                    '--glue', "br.com.tailon.core",
+                    '--plugin', "pretty",
+                    '--plugin', "rerun:target/rerun.txt",
+            ]
+        }
+    }
+}
